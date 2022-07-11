@@ -45,7 +45,7 @@ func main() {
 
 func NameHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Fprintf(w, "Hello, %s", vars["PARAM"])
+	fmt.Fprintf(w, "Hello, %s!", vars["PARAM"])
 }
 
 func BadRequestHandler(w http.ResponseWriter, r *http.Request) {
