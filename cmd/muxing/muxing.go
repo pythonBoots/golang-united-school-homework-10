@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -20,6 +21,11 @@ main function reads host/port from env just for an example, flavor it following 
 // Start /** Starts the web server listener on given host and port.
 func Start(host string, port int) {
 	router := mux.NewRouter()
+	router.HandleFunc("/name/{PARAM}", NameHandler).Methods(http.MethodGet)
+	router.HandleFunc("/bad", BadRequestHandler).Methods(http.MethodGet)
+	router.HandleFunc("/data", DataPostHandler).Methods(http.MethodPost)
+	router.HandleFunc("/headers", SumPostHandler).Methods(http.MethodPost)
+	http.Handle("/", router)
 
 	log.Println(fmt.Printf("Starting API server on %s:%d\n", host, port))
 	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router); err != nil {
@@ -35,4 +41,29 @@ func main() {
 		port = 8081
 	}
 	Start(host, port)
+}
+
+func NameHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	fmt.Fprintf(w, "Hello, %s", vars["PARAM"])
+}
+
+func BadRequestHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func DataPostHandler(w http.ResponseWriter, r *http.Request) {
+	d, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Errorf("%w", err)
+	}
+	fmt.Fprintf(w, "I got message:\n%s", d)
+}
+
+func SumPostHandler(w http.ResponseWriter, r *http.Request) {
+	a, _ := strconv.Atoi(r.Header.Get("a"))
+	b, _ := strconv.Atoi(r.Header.Get("b"))
+	sum := a + b
+	w.Header().Set("a+b", strconv.Itoa(sum))
+
 }
